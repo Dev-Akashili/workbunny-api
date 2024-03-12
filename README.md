@@ -35,4 +35,4 @@ The easiest way is using the dotnet cli:
 
 ## Email Verification
 
-Verification emails sent by the `Account Controller` for auth uses **EmailJS**. The credentials are stored in `appsettings.Development.json`. Request for the credentials (public key, service id and template id) to set up your local repo.
+Verification emails sent by the `Account Controller` for auth uses **EmailJS**. The credentials are stored in `appsettings.Development.json`. Kindly request for the credentials (public key, service id and template id) to set up your local repo.
