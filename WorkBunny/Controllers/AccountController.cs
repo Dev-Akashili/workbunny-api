@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using WorkBunny.Constants;
 using WorkBunny.Data;
 using WorkBunny.Data.Entities.Identity;
 using WorkBunny.Models.Account;
@@ -37,17 +39,20 @@ public class AccountController : ControllerBase
         {
             return Ok(new AuthMessage
             {
-                Email = email,
+                Id = "AC42",
+                Name = AuthMessageName.Error,
                 Message = "A User with this email does not exist"
             });
         }
 
         // If user exists check if problem is email is not confirmed or password is wrong
         var message = user.EmailConfirmed ? "Password incorrect!" : "Verify email to login";
+        var name = user.EmailConfirmed ? AuthMessageName.Error : AuthMessageName.Info;
 
         return Ok(new AuthMessage
         {
-            Email = email,
+            Id = "AC54",
+            Name = name,
             Message = message
         });
     }
@@ -69,8 +74,12 @@ public class AccountController : ControllerBase
         }
         catch (Exception e)
         {
-            Console.WriteLine(e.Message);
-            return BadRequest("Something went wrong! Please try again later or contact us.");
+            return BadRequest(new AuthMessage
+            {
+                Id = "AC80",
+                Name = AuthMessageName.Error,
+                Message = "Something went wrong! Please try again later or contact us."
+            });
         }
     }
     
@@ -79,12 +88,17 @@ public class AccountController : ControllerBase
     {
         try
         {
-            var message = await _emailService.ValidateCode(model);
+            var message = await _emailService.ValidateCode(model, false);
             return Ok(new { Message = message });
         }
         catch (KeyNotFoundException e)
         {
-            return NotFound(e.Message);
+            return NotFound(new AuthMessage
+            {
+                Id = "AC98",
+                Name = AuthMessageName.Error,
+                Message = e.Message
+            });
         }
     }
 
@@ -103,7 +117,12 @@ public class AccountController : ControllerBase
         catch (Exception e)
         {
             Console.WriteLine(e.Message);
-            return BadRequest("Something went wrong! Please try again later or contact us.");
+            return BadRequest(new AuthMessage
+            {
+                Id = "AC122",
+                Name = AuthMessageName.Error,
+                Message = "Something went wrong! Please try again later or contact us."
+            });
         }
     }
 
@@ -112,15 +131,23 @@ public class AccountController : ControllerBase
     {
         try
         {
-            var user = await _userManager.FindByEmailAsync(model.Email) ??
-                       throw new KeyNotFoundException("Something went wrong. Please try again");
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+            {
+                return BadRequest(new AuthMessage
+                {
+                    Id = "AC139",
+                    Name = AuthMessageName.Error,
+                    Message = "Something went wrong. Please try again"
+                });
+            }
 
             var message = await _emailService.ValidateCode(new ValidateEmailModel
             {
                 Code = model.Code,
                 CodeId = model.CodeId,
                 Email = model.Email
-            });
+            }, true);
 
             if (!message.Equals("success")) return BadRequest(message);
                 
@@ -130,18 +157,36 @@ public class AccountController : ControllerBase
             
             if (result.Succeeded)
             {
-                return Ok(new { Message = "Password has been successfully reset." });
+                var list = await _db.VerificationCodes.ToListAsync();
+                await _emailService.ClearValidationCodes(list);
+                
+                return Ok(new AuthMessage
+                {
+                    Id = "AC165",
+                    Name = AuthMessageName.Success,
+                    Message = "Password has been successfully reset."
+                });
             }
             else
             {
                 // If resetting the password failed, return error messages
-                return BadRequest(string.Join(", ", result.Errors.Select(error => error.Description)));
+                return BadRequest(new AuthMessage
+                {
+                    Id = "AC175",
+                    Name = AuthMessageName.Error,
+                    Message = string.Join(", ", result.Errors.Select(error => error.Description))
+                });
             }
         }
         catch (Exception e)
         {
             Console.WriteLine(e.Message);
-            return BadRequest("Something went wrong! Please try again later or contact us.");
+            return BadRequest(new AuthMessage
+            {
+                Id = "AC186",
+                Name = AuthMessageName.Error,
+                Message = "Something went wrong! Please try again later or contact us."
+            });
         }
     }
 }

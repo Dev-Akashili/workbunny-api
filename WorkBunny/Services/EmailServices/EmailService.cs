@@ -71,7 +71,7 @@ public class EmailService : IEmailService
         return result;
     }
     
-    public async Task<string> ValidateCode(ValidateEmailModel model)
+    public async Task<string> ValidateCode(ValidateEmailModel model, bool reset)
     {
         var list = await _db.VerificationCodes.ToListAsync();
         var verificationCode = list.FirstOrDefault(x => x.CodeId == model.CodeId);
@@ -91,10 +91,15 @@ public class EmailService : IEmailService
         var emailConfirmationToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
         await _userManager.ConfirmEmailAsync(user, emailConfirmationToken);
 
+        if (!reset) await ClearValidationCodes(list);
+
+        return "success";
+    }
+
+    public async Task ClearValidationCodes(IEnumerable<VerificationCode> list)
+    {
         // Clear all verification codes
         _db.VerificationCodes.RemoveRange(list);
         await _db.SaveChangesAsync();
-
-        return "success";
     }
 }
