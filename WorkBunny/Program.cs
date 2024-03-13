@@ -30,9 +30,17 @@ builder.Services
     });
 
 // Add Identity services to the container
-builder.Services.AddAuthorization();
 builder.Services.AddIdentityApiEndpoints<ApplicationUser>()
+    .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
+
+// Add Authorization Policy
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("RequireAdmin",
+        policy => policy.RequireRole("Admin"));
+});
+
 // Require email confirmation to log in
 builder.Services.Configure<IdentityOptions>(options =>
 {
@@ -54,6 +62,24 @@ builder.Services.AddCors(options =>
 builder.Services.AddTransient<IEmailService, EmailService>();
 
 var app = builder.Build();
+
+// Seed in roles
+using (var scope = app.Services.CreateScope())
+{
+    var roleManager = scope.ServiceProvider
+        .GetRequiredService<RoleManager<IdentityRole>>();
+
+    string[] roles = { "Admin", "Platinum", "Basic" };
+    
+    foreach (var role in roles)
+    {
+        var exists = await roleManager.RoleExistsAsync(role);
+        if (!exists)
+        {
+            await roleManager.CreateAsync(new IdentityRole(role));
+        }
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

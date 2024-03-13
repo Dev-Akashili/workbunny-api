@@ -86,12 +86,14 @@ public class EmailService : IEmailService
             return "This code has expired. Generate a new one";
         
         // If code is valid, validate email
-        var user = await _userManager.FindByEmailAsync(model.Email);
-        if (user == null) throw new KeyNotFoundException("Something went wrong");
-        var emailConfirmationToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-        await _userManager.ConfirmEmailAsync(user, emailConfirmationToken);
-
-        if (!reset) await ClearValidationCodes(list);
+        if (!reset)
+        {
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null) throw new KeyNotFoundException("Something went wrong");
+            var emailConfirmationToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            await _userManager.ConfirmEmailAsync(user, emailConfirmationToken);
+            await ClearValidationCodes(list);
+        }
 
         return "success";
     }

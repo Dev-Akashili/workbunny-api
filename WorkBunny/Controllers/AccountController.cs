@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SendGrid.Helpers.Errors.Model;
 using WorkBunny.Constants;
 using WorkBunny.Data;
 using WorkBunny.Data.Entities.Identity;
@@ -39,7 +40,7 @@ public class AccountController : ControllerBase
         {
             return Ok(new AuthMessage
             {
-                Id = "AC42",
+                Id = "AC_LN_1",
                 Name = AuthMessageName.Error,
                 Message = "A User with this email does not exist"
             });
@@ -51,7 +52,7 @@ public class AccountController : ControllerBase
 
         return Ok(new AuthMessage
         {
-            Id = "AC54",
+            Id = "AC_LN_2",
             Name = name,
             Message = message
         });
@@ -74,9 +75,11 @@ public class AccountController : ControllerBase
         }
         catch (Exception e)
         {
+            Console.WriteLine(e.Message);
+            
             return BadRequest(new AuthMessage
             {
-                Id = "AC80",
+                Id = "AC_SE",
                 Name = AuthMessageName.Error,
                 Message = "Something went wrong! Please try again later or contact us."
             });
@@ -89,13 +92,36 @@ public class AccountController : ControllerBase
         try
         {
             var message = await _emailService.ValidateCode(model, false);
-            return Ok(new { Message = message });
+            
+            // Assign role to user
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null) throw new NotFoundException("Something went wrong! Please try again.");
+            
+            if (message.Equals("success"))
+            { 
+                var roles = await _userManager.GetRolesAsync(user); 
+                
+                // Role assigning rule
+                var role = model.Email.Equals("emksakashili@gmail.com") ? "Admin" : "Basic";
+                
+               // Add the role if the user doesn't already have it
+               if (!roles.Contains(role)) await _userManager.AddToRoleAsync(user, role);
+               
+               await  _db.SaveChangesAsync();
+            }
+
+            return Ok(new AuthMessage
+            {
+                Id = "AC_VL_1",
+                Name = message.Equals("success") ? AuthMessageName.Success : AuthMessageName.Error,
+                Message = message.Equals("success") ? "Email successfully verified." : "Something went wrong. Please try again."
+            });
         }
         catch (KeyNotFoundException e)
         {
             return NotFound(new AuthMessage
             {
-                Id = "AC98",
+                Id = "AC_VL_2",
                 Name = AuthMessageName.Error,
                 Message = e.Message
             });
@@ -119,7 +145,7 @@ public class AccountController : ControllerBase
             Console.WriteLine(e.Message);
             return BadRequest(new AuthMessage
             {
-                Id = "AC122",
+                Id = "AC_FD",
                 Name = AuthMessageName.Error,
                 Message = "Something went wrong! Please try again later or contact us."
             });
@@ -136,7 +162,7 @@ public class AccountController : ControllerBase
             {
                 return BadRequest(new AuthMessage
                 {
-                    Id = "AC139",
+                    Id = "AC_RD_1",
                     Name = AuthMessageName.Error,
                     Message = "Something went wrong. Please try again"
                 });
@@ -162,7 +188,7 @@ public class AccountController : ControllerBase
                 
                 return Ok(new AuthMessage
                 {
-                    Id = "AC165",
+                    Id = "AC_RD_2",
                     Name = AuthMessageName.Success,
                     Message = "Password has been successfully reset."
                 });
@@ -172,7 +198,7 @@ public class AccountController : ControllerBase
                 // If resetting the password failed, return error messages
                 return BadRequest(new AuthMessage
                 {
-                    Id = "AC175",
+                    Id = "AC_RD_3",
                     Name = AuthMessageName.Error,
                     Message = string.Join(", ", result.Errors.Select(error => error.Description))
                 });
@@ -183,7 +209,7 @@ public class AccountController : ControllerBase
             Console.WriteLine(e.Message);
             return BadRequest(new AuthMessage
             {
-                Id = "AC186",
+                Id = "AC_RD_4",
                 Name = AuthMessageName.Error,
                 Message = "Something went wrong! Please try again later or contact us."
             });

@@ -5,10 +5,15 @@ namespace WorkBunny.Controllers;
 
 [ApiController]
 [Route("api/v1/[controller]")]
-[Authorize]
 public class TestController : ControllerBase
 {
-    [HttpGet]
-    public async Task<ActionResult<string>> TestControllerAuth() 
-        => await Task.FromResult(Ok("Auth Works Fine!"));
+    [Authorize(Policy = "RequireAdmin")]
+    [HttpGet("admin")]
+    public async Task<ActionResult<string>> TestAdmin() 
+        => await Task.FromResult(Ok("Admin Works Fine!"));
+    
+    [Authorize]
+    [HttpGet("basic")]
+    public async Task<ActionResult<string>> TestBasic() 
+        => await Task.FromResult(Ok("Basic Works Fine!"));
 }
