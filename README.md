@@ -5,12 +5,12 @@ This repo consists of an ASP.NET Core Web API. It exposes the endpoints to be us
 ## Prerequisites
 
 1. **.NET SDK** `8.x`
-   - The backend API is .NET8
+   - The API is .NET8
 2. Docker
 
 ## App Configuration
 
-The backend app can be configured in any standard way an ASP.NET Core application can. Typically from the Azure Portal (Environment variables) or an `appsettings.json`.
+The app can be configured in any standard way an ASP.NET Core application can. Typically from the Azure Portal (Environment variables) or an `appsettings.json`.
 
 ## Database setup
 
@@ -26,10 +26,10 @@ The easiest way is using the dotnet cli:
 
 - Anywhere in the repo: `dotnet tool restore`
 
-1. Navigate to the same directory as `Backend.csproj`
+1. Navigate to the same directory as `WorkBunny.csproj`
 1. Run migrations:
 
-- `dotnet ef database update -s Backend`
+- `dotnet ef database update -s WorkBunny`
 - The above runs against the default local server, using the connection string in `appsettings.Development.json`
 - You can specify a connection string with the `--connection "<connection string>"` option
 
