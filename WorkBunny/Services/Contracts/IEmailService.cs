@@ -5,7 +5,6 @@ namespace WorkBunny.Services.Contracts;
 
 public interface IEmailService
 {
-    Task<int> SendEmailVerificationCode(string to);
+    Task SendEmailVerificationLink(string to);
     Task<string> ValidateCode(ValidateEmailModel model, bool request);
-    Task ClearValidationCodes(IEnumerable<VerificationCode> list);
 }

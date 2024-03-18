@@ -22,7 +22,7 @@ public class EmailService : IEmailService
         _config = config;
     }
 
-    public async Task<int> SendEmailVerificationCode(string emailAddress)
+    public async Task SendEmailVerificationLink(string emailAddress)
     {
         var code = await GenerateVerificationCode();
         
@@ -39,15 +39,14 @@ public class EmailService : IEmailService
             template_params = new
             {
                 email = emailAddress,
-                code = code.Value
+                codeId = code.CodeId,
+                code = code.Value,
             }
         };
 
         HttpResponseMessage response = await _client.PostAsJsonAsync("https://api.emailjs.com/api/v1.0/email/send", email);
 
         response.EnsureSuccessStatusCode();
-
-        return code.CodeId;
     }
 
     private async Task<VerificationCode> GenerateVerificationCode()
@@ -92,16 +91,10 @@ public class EmailService : IEmailService
             if (user == null) throw new KeyNotFoundException("Something went wrong");
             var emailConfirmationToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             await _userManager.ConfirmEmailAsync(user, emailConfirmationToken);
-            await ClearValidationCodes(list);
+            _db.VerificationCodes.Remove(verificationCode);
+            await _db.SaveChangesAsync();
         }
 
         return "success";
-    }
-
-    public async Task ClearValidationCodes(IEnumerable<VerificationCode> list)
-    {
-        // Clear all verification codes
-        _db.VerificationCodes.RemoveRange(list);
-        await _db.SaveChangesAsync();
     }
 }

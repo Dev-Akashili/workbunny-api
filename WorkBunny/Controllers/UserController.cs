@@ -25,11 +25,7 @@ public class UserController : ControllerBase
         
         if (user == null)
         {
-            return NotFound(new AuthMessage
-            {
-                Name = AuthMessageName.Error,
-                Message = "User isn't authenticated"
-            });
+            return NotFound( "User isn't authenticated");
         }
         
         return Ok(new UserModel
