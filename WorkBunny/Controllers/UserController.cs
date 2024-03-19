@@ -27,11 +27,15 @@ public class UserController : ControllerBase
         {
             return Unauthorized();
         }
-        
+
+        var list = await _userManager.GetRolesAsync(user);
+        var roles = list.ToList();
+
         return Ok(new UserModel
         {
             Email = user.Email,
-            UserName = user.UserName
+            UserName = user.UserName,
+            Roles = roles
         });
     }
 }

@@ -82,19 +82,19 @@ public class AccountController : ControllerBase
         return Ok(new { Name = name, Message = message });
     }
 
-    [HttpPost("sendEmailVerificationCode")]
-    public async Task<IActionResult> SendEmailVerificationLink(string email)
+    [HttpPost("sendEmailVerificationLink")]
+    public async Task<IActionResult> SendEmailVerificationLink(string email, string name)
     {
         // Check if user exists
         var user = await _userManager.FindByEmailAsync(email);
-        if (user == null) return BadRequest("User does not exist");
-        
+        if (user == null) return Ok();
+
         // If user exists but has already been confirmed
-        if (user.EmailConfirmed) return BadRequest("User Email is already confirmed");
+        if (user.EmailConfirmed && name.Equals("register")) return BadRequest("User Email is already confirmed");
         
         try
         { 
-            await _emailService.SendEmailVerificationLink(email);
+            await _emailService.SendEmailVerificationLink(email, name);
             return Ok();
         }
         catch (Exception e)
@@ -129,34 +129,16 @@ public class AccountController : ControllerBase
                await  _db.SaveChangesAsync();
             }
 
-            var result = message.Equals("success")
-                ? "Email successfully verified."
-                : "Something went wrong. Please try again.";
-            
-            return Ok(result);
+            if (!message.Equals("success"))
+            {
+                return BadRequest(message);
+            }
+
+            return Ok("Email successfully verified.");
         }
         catch (KeyNotFoundException e)
         {
             return NotFound(e.Message);
-        }
-    }
-
-    [HttpPost("forgotPassword")]
-    public async Task<IActionResult> ForgotPassword(string email)
-    {
-        try
-        {
-            // Check for user
-            var user = await _userManager.FindByEmailAsync(email);
-            if (user == null) return Ok();
-
-            await _emailService.SendEmailVerificationLink(email);
-            return Ok();
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e.Message);
-            return BadRequest(DefaultErrorMsg);
         }
     }
 

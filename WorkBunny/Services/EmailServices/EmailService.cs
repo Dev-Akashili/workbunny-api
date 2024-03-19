@@ -22,19 +22,20 @@ public class EmailService : IEmailService
         _config = config;
     }
 
-    public async Task SendEmailVerificationLink(string emailAddress)
+    public async Task SendEmailVerificationLink(string emailAddress, string name)
     {
         var code = await GenerateVerificationCode();
         
         // Get EmailJS Credentials from config
         var serviceId = _config["EmailJS:ServiceId"] ?? throw new KeyNotFoundException("Service Id not valid");
-        var templateId = _config["EmailJS:TemplateId"] ?? throw new KeyNotFoundException("Template Id not valid");
+        var registerTemplateId = _config["EmailJS:RegisterTemplateId"] ?? throw new KeyNotFoundException("Template Id not valid");
+        var resetTemplateId = _config["EmailJS:ResetTemplateId"] ?? throw new KeyNotFoundException("Template Id not valid");
         var key = _config["EmailJS:Key"] ?? throw new KeyNotFoundException("Private Id not valid");
         
         var email = new
         {
             service_id = serviceId,
-            template_id = templateId,
+            template_id = name.Equals("register") ? registerTemplateId : resetTemplateId,
             user_id = key,
             template_params = new
             {
@@ -79,10 +80,11 @@ public class EmailService : IEmailService
 
         // Check if code is valid
         if (model.Code != verificationCode.Value) return "This code is not valid!";
-
+        
         // Check if code has expired
-        if (model.CurrentTime >= verificationCode.TimeSent.AddMinutes(3)) 
-            return "This code has expired. Generate a new one";
+        var expiry = reset ? 5 : 3;
+        if (model.CurrentTime >= verificationCode.TimeSent.AddMinutes(expiry)) 
+            return "expired";
         
         // If code is valid, validate email
         if (!reset)
