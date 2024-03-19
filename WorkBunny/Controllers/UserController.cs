@@ -25,12 +25,13 @@ public class UserController : ControllerBase
         
         if (user == null)
         {
-            return NotFound( "User isn't authenticated");
+            return Unauthorized();
         }
         
         return Ok(new UserModel
         {
-            Email = user.Email
+            Email = user.Email,
+            UserName = user.UserName
         });
     }
 }

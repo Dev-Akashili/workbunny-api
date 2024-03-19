@@ -50,12 +50,14 @@ builder.Services.Configure<IdentityOptions>(options =>
 // Configure Cors
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(policy =>
-    {
-        policy.AllowAnyOrigin()
-            .AllowAnyHeader()
-            .AllowAnyMethod();
-    });
+    options.AddPolicy("AllowSpecificOrigin",
+        builder =>
+        {
+            builder.WithOrigins("http://localhost:5173")
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials();
+        });
 });
 
 // Register services
@@ -107,8 +109,8 @@ app.MapPost("/logout", async (SignInManager<ApplicationUser> signInManager,
     .WithOpenApi()
     .RequireAuthorization();
 
-// Add Cors
-app.UseCors();
+// Use Cors
+app.UseCors("AllowSpecificOrigin");
 
 // Endpoints
 app.MapControllers();
