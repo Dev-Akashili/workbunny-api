@@ -1,8 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using WorkBunny.Constants;
 using WorkBunny.Data.Entities.Identity;
-using WorkBunny.Models.Account;
 using WorkBunny.Models.User;
 
 namespace WorkBunny.Controllers;
@@ -34,7 +32,7 @@ public class UserController : ControllerBase
         return Ok(new UserModel
         {
             Email = user.Email,
-            UserName = user.UserName,
+            UserName = user.CustomUserName,
             Roles = roles
         });
     }

@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SendGrid.Helpers.Errors.Model;
-using WorkBunny.Constants;
 using WorkBunny.Data;
 using WorkBunny.Data.Entities.Identity;
 using WorkBunny.Models.Account;
@@ -43,7 +42,7 @@ public class AccountController : ControllerBase
         }
         
         // Check if the username is already taken
-        var exists = await _userManager.FindByNameAsync(model.Username);
+        var exists = await _db.Users.FirstOrDefaultAsync(x => x.CustomUserName == model.Username);
         if (exists != null)
         {
             await _userManager.DeleteAsync(user);
@@ -52,10 +51,10 @@ public class AccountController : ControllerBase
         }
 
         // Add the custom username
-        user.UserName = model.Username;
+        user.CustomUserName = model.Username;
         await _userManager.UpdateAsync(user);
 
-        return NoContent();
+        return Ok();
     }
 
     [HttpPost("login")]
