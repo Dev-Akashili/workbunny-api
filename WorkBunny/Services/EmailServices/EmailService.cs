@@ -73,10 +73,9 @@ public class EmailService : IEmailService
     
     public async Task<string> ValidateCode(ValidateEmailModel model, bool reset)
     {
-        var list = await _db.VerificationCodes.ToListAsync();
-        var verificationCode = list.FirstOrDefault(x => x.CodeId == model.CodeId);
+        var verificationCode = await _db.VerificationCodes.FirstOrDefaultAsync(x => x.CodeId == model.CodeId);
         
-        if (verificationCode == null) throw new KeyNotFoundException("Something went wrong");
+        if (verificationCode == null) return "expired";
 
         // Check if code is valid
         if (model.Code != verificationCode.Value) return "This code is not valid!";

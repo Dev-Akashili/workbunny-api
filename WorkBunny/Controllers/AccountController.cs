@@ -159,7 +159,7 @@ public class AccountController : ControllerBase
                 Email = model.Email
             }, true);
 
-            if (!message.Equals("success")) return BadRequest(message);
+            if (!message.Equals("success")) return BadRequest(new { Errors = message });
                 
             // Reset Password
             var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
@@ -177,7 +177,8 @@ public class AccountController : ControllerBase
             else
             {
                 // If resetting the password failed, return error messages
-                return BadRequest(string.Join(", ", result.Errors.Select(error => error.Description)));
+                var errors = result.Errors.Select(error => error.Description).ToArray();
+                return BadRequest(new { Errors = errors });
             }
         }
         catch (Exception e)
