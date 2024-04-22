@@ -52,6 +52,7 @@ public class AccountController : ControllerBase
 
         // Add the custom username
         user.CustomUserName = model.Username;
+        user.Country = model.Country;
         await _userManager.UpdateAsync(user);
 
         return Ok();

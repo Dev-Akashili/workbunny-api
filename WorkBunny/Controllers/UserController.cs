@@ -32,6 +32,7 @@ public class UserController : ControllerBase
         return Ok(new UserModel
         {
             Email = user.Email,
+            Country = user.Country,
             UserName = user.CustomUserName,
             Roles = roles
         });
