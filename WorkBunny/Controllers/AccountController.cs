@@ -50,7 +50,7 @@ public class AccountController : ControllerBase
             return BadRequest("Username is taken!");
         }
 
-        // Add the custom username
+        // Add the custom username and country
         user.CustomUserName = model.Username;
         user.Country = model.Country;
         await _userManager.UpdateAsync(user);
